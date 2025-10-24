@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Healthcare System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-nav { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+        .glass-card { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-4px); }
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <!-- Enhanced Navbar -->
+    <nav class="gradient-nav shadow-2xl border-b border-blue-300/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center text-white text-2xl font-bold hover:scale-105 transition-transform">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 backdrop-blur-sm">
+                            <i class="fas fa-heartbeat text-2xl text-white"></i>
+                        </div>
+                        <span class="hidden sm:block">Healthcare System</span>
+                    </a>
+                </div>
+
+                <!-- Enhanced Menu Items -->
+                <div class="hidden md:flex items-center space-x-2">
+                    <a th:href="@{/dashboard}" class="text-white bg-white/20 px-4 py-2 rounded-xl text-sm font-medium backdrop-blur-sm hover:bg-white/30 transition-all">
+                        <i class="fas fa-home mr-2"></i> Dashboard
+                    </a>
+                    <a th:if="${user != null && user.role.name() == 'PATIENT'}" href="/appointments/my-appointments" class="text-white/90 hover:bg-white/20 hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-calendar-check mr-2"></i> Appointments
+                    </a>
+                    <a th:if="${user != null && user.role.name() == 'DOCTOR'}" href="#" class="text-white/90 hover:bg-white/20 hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-user-injured mr-2"></i> Patients
+                    </a>
+                    <a th:if="${user != null && user.role.name() == 'ADMIN'}" href="#" class="text-white/90 hover:bg-white/20 hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-users-cog mr-2"></i> Manage Users
+                    </a>
+                    <a th:if="${user != null && user.role.name() == 'STAFF'}" th:href="@{/staff/scanner}" class="text-white/90 hover:bg-white/20 hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-qrcode mr-2"></i> Scan QR Code
+                    </a>
+                </div>
+
+                <!-- Enhanced User Info -->
+                <div th:if="${user != null}" class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <!-- Enhanced Avatar -->
+                        <a th:href="@{/profile}" class="relative w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold hover:scale-110 transition-all duration-200 cursor-pointer shadow-lg" title="View Profile">
+                            <span th:text="${#strings.substring(user.name, 0, 1)}">U</span>
+                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white pulse-dot"></div>
+                        </a>
+                        <!-- User Details -->
+                        <div class="hidden lg:block">
+                            <div class="text-sm font-semibold text-white" th:text="${user.name}">User Name</div>
+                            <div class="text-xs text-blue-200">
+                                <span th:if="${user.role.name() == 'PATIENT'}" class="inline-block bg-green-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">Patient</span>
+                                <span th:if="${user.role.name() == 'DOCTOR'}" class="inline-block bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">Doctor</span>
+                                <span th:if="${user.role.name() == 'ADMIN'}" class="inline-block bg-red-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">Admin</span>
+                                <span th:if="${user.role.name() == 'STAFF'}" class="inline-block bg-purple-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">Staff</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Enhanced Logout Button -->
+                    <a th:href="@{/logout}" class="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 backdrop-blur-sm hover:scale-105 shadow-lg">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Enhanced Welcome Section -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl shadow-2xl p-8 mb-8 text-white">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full -ml-24 -mb-24"></div>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-4xl font-bold mb-3">
+                            <i class="fas fa-hand-wave mr-3 text-yellow-300"></i> 
+                            Welcome back, <span th:text="${user.name}" class="text-yellow-300">User</span>!
+                        </h2>
+                        <p class="text-xl text-blue-100 mb-4">
+                            <span th:if="${user.role.name() == 'PATIENT'}">
+                                <i class="fas fa-user-heart mr-2"></i>Manage your health journey with ease. Book appointments, view records, and stay connected with your healthcare providers.
+                            </span>
+                            <span th:if="${user.role.name() == 'DOCTOR'}">
+                                <i class="fas fa-stethoscope mr-2"></i>Access your patient management tools and provide exceptional care to your patients.
+                            </span>
+                            <span th:if="${user.role.name() == 'ADMIN'}">
+                                <i class="fas fa-crown mr-2"></i>Oversee the entire healthcare system with comprehensive administrative controls.
+                            </span>
+                            <span th:if="${user.role.name() == 'STAFF'}">
+                                <i class="fas fa-user-nurse mr-2"></i>Streamline patient check-ins and provide efficient front-desk services.
+                            </span>
+                        </p>
+                        <div class="flex items-center space-x-4 text-blue-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span id="currentTime"></span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2"></i>
+                                <span id="currentDate"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden lg:block">
+                        <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <i th:if="${user.role.name() == 'PATIENT'}" class="fas fa-user-heart text-6xl text-white/80"></i>
+                            <i th:if="${user.role.name() == 'DOCTOR'}" class="fas fa-stethoscope text-6xl text-white/80"></i>
+                            <i th:if="${user.role.name() == 'ADMIN'}" class="fas fa-crown text-6xl text-white/80"></i>
+                            <i th:if="${user.role.name() == 'STAFF'}" class="fas fa-user-nurse text-6xl text-white/80"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Health Card Section (Only for PATIENT) -->
+        <div th:if="${user.role.name() == 'PATIENT' && user.healthCard != null}" class="glass-card rounded-3xl shadow-2xl overflow-hidden mb-8 border border-white/20">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 backdrop-blur-sm">
+                            <i class="fas fa-id-card text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-2xl font-bold">Your Health Card</h5>
+                            <p class="text-blue-100 text-sm">Digital health identification</p>
+                        </div>
+                    </div>
+                    <a th:href="@{/health-card/download}" 
+                       class="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm hover:scale-105">
+                        <i class="fas fa-download mr-2"></i>Download Card
+                    </a>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h6 class="text-lg font-semibold text-gray-700">
+                        Card Details
+                    </h6>
+                    <a th:href="@{/health-card/download}" 
+                       class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition duration-300 shadow-md hover:shadow-lg">
+                        <i class="fas fa-download mr-2"></i>Download Health Card
+                    </a>
+                </div>
+                
+                <div class="bg-blue-200 rounded-xl p-6 border border-primary/20">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Health Card Details -->
+                                <div class="space-y-4">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-id-badge text-primary text-2xl mr-3 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-600 font-semibold">Card ID</p>
+                                            <p class="text-gray-800 font-mono text-sm" th:text="${#strings.substring(user.healthCard.id, 0, 12) + '...'}"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <i class="fas fa-user-circle text-primary text-2xl mr-3 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-600 font-semibold">Patient Name</p>
+                                            <p class="text-gray-800 font-medium" th:text="${user.healthCard.patientName}"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <i class="fas fa-calendar-plus text-primary text-2xl mr-3 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-600 font-semibold">Issue Date</p>
+                                            <p class="text-gray-800" th:text="${#temporals.format(user.healthCard.createDate, 'dd-MM-yyyy')}"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <i class="fas fa-calendar-times text-primary text-2xl mr-3 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-600 font-semibold">Expiry Date</p>
+                                            <p class="text-gray-800" th:text="${#temporals.format(user.healthCard.expireDate, 'dd-MM-yyyy')}"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <i class="fas fa-circle-check text-primary text-2xl mr-3 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-600 font-semibold">Status</p>
+                                            <span th:if="${user.healthCard.status == 'ACTIVE'}" 
+                                                  class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                                <i class="fas fa-check-circle mr-1"></i>ACTIVE
+                                            </span>
+                                            <span th:if="${user.healthCard.status != 'ACTIVE'}" 
+                                                  class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                                <i class="fas fa-times-circle mr-1"></i>INACTIVE
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- QR Code Preview -->
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="bg-white p-4 rounded-lg border-2 border-blue-600 shadow-lg">
+                                        <img th:if="${user.healthCard.qrCode}" 
+                                             th:src="${user.healthCard.qrCode}" 
+                                             alt="Health Card QR Code" 
+                                             class="w-48 h-48 object-contain">
+                                        <div th:unless="${user.healthCard.qrCode}" 
+                                             class="w-48 h-48 flex items-center justify-center bg-gray-100 rounded">
+                                            <p class="text-gray-500 text-sm text-center">QR Code not available</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mt-3 text-center font-medium">
+                                        <i class="fas fa-info-circle mr-1"></i>Show this QR code to staff for verification
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Health Card Info Banner -->
+                            <div class="mt-6 bg-white/70 rounded-lg p-4 border border-blue-600">
+                                <p class="text-sm text-gray-700 flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-2 mt-1"></i>
+                                    <span><strong>Note:</strong> Your health card is valid for one year from the issue date. 
+                                    Please download and keep it safe. Present it at the hospital reception for quick identification and service.</span>
+                                </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Quick Actions -->
+        <div class="glass-card rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h4 class="text-4xl font-bold text-gray-800 mb-3">
+                        <i class="fas fa-bolt text-yellow-500 mr-3"></i>Quick Actions
+                    </h4>
+                    <p class="text-gray-600 text-lg">Choose from the available options to get started</p>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-rocket text-2xl text-white"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Patient Actions -->
+            <div th:if="${user.role.name() == 'PATIENT'}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Book Appointment Card -->
+                <div class="group relative bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl hover-lift transition-all duration-300 border border-blue-400/20">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                            <i class="fas fa-calendar-plus text-4xl text-white"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Book Appointment</h5>
+                        <p class="text-blue-100 mb-6 text-sm leading-relaxed">Schedule a new appointment with your preferred doctor</p>
+                        <a href="/appointments/book" class="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 backdrop-blur-sm hover:scale-105 shadow-lg">
+                            <span>Book Now</span>
+                            <i class="fas fa-arrow-right ml-3"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- My Appointments Card -->
+                <div class="group relative bg-gradient-to-br from-purple-500 via-purple-600 to-violet-700 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl hover-lift transition-all duration-300 border border-purple-400/20">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                            <i class="fas fa-calendar-check text-4xl text-white"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">My Appointments</h5>
+                        <p class="text-purple-100 mb-6 text-sm leading-relaxed">View and manage your upcoming appointments</p>
+                        <a href="/appointments/my-appointments" class="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 backdrop-blur-sm hover:scale-105 shadow-lg">
+                            <span>View All</span>
+                            <i class="fas fa-arrow-right ml-3"></i>
+                        </a>
+                    </div>
+                </div>
+          
+                <!-- Medical Records Card -->
+                <div class="group relative bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl hover-lift transition-all duration-300 border border-green-400/20">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                            <i class="fas fa-file-medical text-4xl text-white"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Medical Records</h5>
+                        <p class="text-green-100 mb-6 text-sm leading-relaxed">Access your complete medical history and reports</p>
+                        <a href="/medical-records" class="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 backdrop-blur-sm hover:scale-105 shadow-lg">
+                            <span>View Records</span>
+                            <i class="fas fa-arrow-right ml-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Actions -->
+            <div th:if="${user.role.name() == 'DOCTOR'}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- My Patients Card -->
+                <div class="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-users text-4xl text-blue-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">My Patients</h5>
+                        <p class="text-blue-100 mb-6 text-sm">View and manage your patients</p>
+                        <button class="inline-flex items-center bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition duration-200 shadow-md">
+                            <span>View Patients</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Appointments Card -->
+                <div class="group relative bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-calendar-alt text-4xl text-green-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Appointments</h5>
+                        <p class="text-green-100 mb-6 text-sm">Manage your appointment schedule</p>
+                        <button class="inline-flex items-center bg-white text-green-600 px-6 py-3 rounded-xl font-semibold hover:bg-green-50 transition duration-200 shadow-md">
+                            <span>View Schedule</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Medical Records Card -->
+                <div class="group relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-file-medical text-4xl text-purple-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Medical Records</h5>
+                        <p class="text-purple-100 mb-6 text-sm">View patient medical records</p>
+                        <a href="/medical-records" class="inline-flex items-center bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition duration-200 shadow-md">
+                            <span>View Records</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Prescriptions Card -->
+                <div class="group relative bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-prescription text-4xl text-amber-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Prescriptions</h5>
+                        <p class="text-amber-100 mb-6 text-sm">Create and manage prescriptions</p>
+                        <button class="inline-flex items-center bg-white text-amber-600 px-6 py-3 rounded-xl font-semibold hover:bg-amber-50 transition duration-200 shadow-md">
+                            <span>Manage</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Actions -->
+            <div th:if="${user.role.name() == 'ADMIN'}" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- User Management Card -->
+                <div class="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-users-cog text-4xl text-blue-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">User Management</h5>
+                        <p class="text-blue-100 mb-6 text-sm">Manage doctors, patients, and staff</p>
+                        <button class="inline-flex items-center bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition duration-200 shadow-md">
+                            <span>Manage Users</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reports Card -->
+                <div class="group relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-chart-line text-4xl text-emerald-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Reports</h5>
+                        <p class="text-emerald-100 mb-6 text-sm">View system reports and analytics</p>
+                        <button class="inline-flex items-center bg-white text-emerald-600 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition duration-200 shadow-md">
+                            <span>View Reports</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Settings Card -->
+                <div class="group relative bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-cog text-4xl text-slate-600"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">System Settings</h5>
+                        <p class="text-slate-100 mb-6 text-sm">Configure system preferences</p>
+                        <button class="inline-flex items-center bg-white text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition duration-200 shadow-md">
+                            <span>Settings</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Staff Actions -->
+            <div th:if="${user.role.name() == 'STAFF'}" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Scan QR Code Card -->
+                <div class="group relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-qrcode text-4xl text-purple-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Scan QR Code</h5>
+                        <p class="text-purple-100 mb-6 text-sm">Scan patient QR code to view details</p>
+                        <a th:href="@{/staff/scanner}" class="inline-flex items-center bg-white text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition duration-200 shadow-md">
+                            <span>Open Scanner</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Check-In Patients Card -->
+                <div class="group relative bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-user-check text-4xl text-teal-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Check-In Patients</h5>
+                        <p class="text-teal-100 mb-6 text-sm">Manage patient check-ins</p>
+                        <button class="inline-flex items-center bg-white text-teal-600 px-6 py-3 rounded-xl font-semibold hover:bg-teal-50 transition duration-200 shadow-md">
+                            <span>View Check-Ins</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule Card -->
+                <div class="group relative bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative p-8 text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-clipboard-list text-4xl text-indigo-500"></i>
+                        </div>
+                        <h5 class="text-2xl font-bold text-white mb-3">Today's Schedule</h5>
+                        <p class="text-indigo-100 mb-6 text-sm">View appointments and schedules</p>
+                        <button class="inline-flex items-center bg-white text-indigo-600 px-6 py-3 rounded-xl font-semibold hover:bg-indigo-50 transition duration-200 shadow-md">
+                            <span>View Schedule</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for enhanced functionality -->
+    <script>
+        // Update current time and date
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Update time
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            };
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleTimeString('en-US', timeOptions);
+            }
+            
+            // Update date
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('en-US', dateOptions);
+            }
+        }
+        
+        // Update time every second
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Add loading states for action buttons
+        document.querySelectorAll('a[href*="/appointments/"], a[href*="/medical-records"]').forEach(link => {
+            link.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+                this.style.pointerEvents = 'none';
+                
+                // Reset after 3 seconds if still on page
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.pointerEvents = 'auto';
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
